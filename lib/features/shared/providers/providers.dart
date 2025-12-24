@@ -1,41 +1,32 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get.dart';
 
 import '../../history/data/clipboard_repository.dart';
 import '../../history/data/clipboard_service.dart';
-import '../../history/domain/analysis_result.dart';
-import '../../history/domain/clipboard_item.dart';
-import '../../history/domain/folder.dart';
+import '../controllers/clipboard_controller.dart';
 
-final baseUrlProvider = StateProvider<String>((ref) {
-  return 'https://api.example.com';
-});
+/// Registers GetX dependencies for clipboard features.
+class ClipboardBinding extends Bindings {
+  ClipboardBinding({String baseUrl = 'https://api.example.com'})
+      : _baseUrl = baseUrl;
 
-final clipboardServiceProvider = Provider<ClipboardService>((ref) {
-  final baseUrl = ref.watch(baseUrlProvider);
-  return ClipboardService(baseUrl: baseUrl);
-});
+  final String _baseUrl;
 
-final clipboardRepositoryProvider = Provider<ClipboardRepository>((ref) {
-  final service = ref.watch(clipboardServiceProvider);
-  return ClipboardRepository(service);
-});
-
-final clipboardItemsProvider = FutureProvider<List<ClipboardItem>>((ref) async {
-  final repo = ref.watch(clipboardRepositoryProvider);
-  return repo.fetchItems();
-});
-
-final favoritesProvider = FutureProvider<List<ClipboardItem>>((ref) async {
-  final repo = ref.watch(clipboardRepositoryProvider);
-  return repo.fetchFavorites();
-});
-
-final foldersProvider = FutureProvider<List<ClipboardFolder>>((ref) async {
-  final repo = ref.watch(clipboardRepositoryProvider);
-  return repo.fetchFolders();
-});
-
-final analyzerProvider = FutureProvider.family<AnalysisResult, String>((ref, text) async {
-  final repo = ref.watch(clipboardRepositoryProvider);
-  return repo.analyze(text);
-});
+  @override
+  void dependencies() {
+    Get.lazyPut<ClipboardService>(
+      () => ClipboardService(baseUrl: _baseUrl),
+      fenix: true,
+    );
+    Get.lazyPut<ClipboardRepository>(
+      () => ClipboardRepository(Get.find<ClipboardService>()),
+      fenix: true,
+    );
+    Get.lazyPut<ClipboardController>(
+      () => ClipboardController(
+        repository: Get.find<ClipboardRepository>(),
+        initialBaseUrl: _baseUrl,
+      ),
+      fenix: true,
+    );
+  }
+}

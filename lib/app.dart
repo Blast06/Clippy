@@ -3,16 +3,10 @@ import 'package:get/get.dart';
 
 import 'core/routes/app_router.dart';
 import 'core/theme/app_theme.dart';
-import 'features/history/data/clipboard_repository.dart';
-import 'features/history/data/clipboard_service.dart';
-import 'features/shared/controllers/clipboard_controller.dart';
+import 'features/shared/providers/providers.dart';
 
 class ClipboardApp extends StatelessWidget {
-  ClipboardApp({super.key}) {
-    final service = ClipboardService(baseUrl: 'https://api.example.com');
-    final repository = ClipboardRepository(service);
-    Get.put(ClipboardController(repository: repository));
-  }
+  const ClipboardApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -20,6 +14,7 @@ class ClipboardApp extends StatelessWidget {
       title: 'Clipboard AI Manager',
       theme: AppTheme.light(),
       debugShowCheckedModeBanner: false,
+      initialBinding: ClipboardBinding(),
       home: const AppRouter(),
     );
   }
