@@ -1,38 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get.dart';
 
-import '../../shared/providers/providers.dart';
+import '../../shared/controllers/clipboard_controller.dart';
 import '../../shared/widgets/clipboard_item_card.dart';
 import '../domain/clipboard_item.dart';
 import 'item_detail_page.dart';
 
-class HistoryPage extends ConsumerStatefulWidget {
+class HistoryPage extends StatefulWidget {
   const HistoryPage({super.key});
 
   @override
-  ConsumerState<HistoryPage> createState() => _HistoryPageState();
+  State<HistoryPage> createState() => _HistoryPageState();
 }
 
-class _HistoryPageState extends ConsumerState<HistoryPage> {
+class _HistoryPageState extends State<HistoryPage> {
+  final ClipboardController controller = Get.find<ClipboardController>();
   String _query = '';
 
   @override
   Widget build(BuildContext context) {
-    final asyncItems = ref.watch(
-      _query.isEmpty
-          ? clipboardItemsProvider
-          : clipboardItemsProvider
-              .select((value) => value.whenData(
-                    (items) => items
-                        .where(
-                          (item) => item.content
-                              .toLowerCase()
-                              .contains(_query.toLowerCase()),
-                        )
-                        .toList(),
-                  )),
-    );
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Clipboard History'),
@@ -40,9 +26,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: () async {
-              final repo = ref.read(clipboardRepositoryProvider);
-              await repo.addItem('New sample snippet at ${DateTime.now()}');
-              setState(() {});
+              await controller.addItem('New sample snippet at ${DateTime.now()}');
             },
           ),
         ],
@@ -60,57 +44,49 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
             ),
             const SizedBox(height: 16),
             Expanded(
-              child: asyncItems.when(
-                data: (items) => _HistoryList(items: items),
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (error, _) => Center(child: Text('Error: $error')),
-              ),
+              child: Obx(() {
+                if (controller.loading.value) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                final List<ClipboardItem> items = _query.isEmpty
+                    ? controller.items
+                    : controller.search(_query);
+
+                if (items.isEmpty) {
+                  return const Center(
+                    child: Text('No clipboard items yet. Copy something to get started!'),
+                  );
+                }
+
+                return ListView.builder(
+                  itemCount: items.length,
+                  itemBuilder: (context, index) {
+                    final item = items[index];
+                    return ClipboardItemCard(
+                      item: item,
+                      onTap: (tapped) => Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(
+                          builder: (_) => ItemDetailPage(item: tapped),
+                        ),
+                      ),
+                      onToggleFavorite: (tapped) async {
+                        await controller.toggleFavorite(tapped.id);
+                      },
+                      onCopy: (tapped) async {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Copied: ${tapped.content}')),
+                        );
+                      },
+                    );
+                  },
+                );
+              }),
             ),
           ],
         ),
       ),
-    );
-  }
-}
-
-class _HistoryList extends ConsumerWidget {
-  const _HistoryList({required this.items});
-
-  final List<ClipboardItem> items;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    if (items.isEmpty) {
-      return const Center(
-        child: Text('No clipboard items yet. Copy something to get started!'),
-      );
-    }
-
-    return ListView.builder(
-      itemCount: items.length,
-      itemBuilder: (context, index) {
-        final item = items[index];
-        return ClipboardItemCard(
-          item: item,
-          onTap: (tapped) => Navigator.push(
-            context,
-            MaterialPageRoute<void>(
-              builder: (_) => ItemDetailPage(item: tapped),
-            ),
-          ),
-          onToggleFavorite: (tapped) async {
-            final repo = ref.read(clipboardRepositoryProvider);
-            await repo.toggleFavorite(tapped.id);
-            ref.invalidate(clipboardItemsProvider);
-            ref.invalidate(favoritesProvider);
-          },
-          onCopy: (tapped) async {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Copied: ${tapped.content}')),
-            );
-          },
-        );
-      },
     );
   }
 }

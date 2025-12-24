@@ -8,7 +8,7 @@ class ClipboardService {
   ClipboardService({required this.baseUrl, http.Client? client})
       : _client = client ?? http.Client();
 
-  final String baseUrl;
+  String baseUrl;
   final http.Client _client;
 
   Future<AnalysisResult> analyze(String text) async {
@@ -30,5 +30,9 @@ class ClipboardService {
       summary: 'No network response. Showing a sample summary for now.',
       tags: const <String>['offline', 'sample'],
     );
+  }
+
+  void updateBaseUrl(String value) {
+    baseUrl = value;
   }
 }

@@ -59,6 +59,10 @@ class ClipboardRepository {
     return _service.analyze(text);
   }
 
+  void updateBaseUrl(String value) {
+    _service.updateBaseUrl(value);
+  }
+
   ClipboardItemType _inferType(String content) {
     final uri = Uri.tryParse(content);
     if (uri != null && uri.hasAbsolutePath) {

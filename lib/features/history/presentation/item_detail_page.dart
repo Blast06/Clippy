@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get.dart';
 
-import '../../shared/providers/providers.dart';
+import '../../shared/controllers/clipboard_controller.dart';
 import '../domain/clipboard_item.dart';
 
-class ItemDetailPage extends ConsumerWidget {
-  const ItemDetailPage({super.key, required this.item});
+class ItemDetailPage extends StatelessWidget {
+  ItemDetailPage({super.key, required this.item});
 
   final ClipboardItem item;
+  final ClipboardController controller = Get.find<ClipboardController>();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final analysis = ref.watch(analyzerProvider(item.content));
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Item Detail')),
       body: Padding(
@@ -28,8 +28,7 @@ class ItemDetailPage extends ConsumerWidget {
               spacing: 8,
               children: <Widget>[
                 Chip(label: Text(item.type.name.toUpperCase())),
-                if (item.isFavorite)
-                  const Chip(label: Text('Favorite')),
+                if (item.isFavorite) const Chip(label: Text('Favorite')),
                 ...item.tags.map((tag) => Chip(label: Text(tag))),
               ],
             ),
@@ -37,24 +36,33 @@ class ItemDetailPage extends ConsumerWidget {
             Text('AI Analysis (via backend)',
                 style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
-            analysis.when(
-              data: (result) => Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(result.title,
-                      style: Theme.of(context).textTheme.titleSmall),
-                  const SizedBox(height: 8),
-                  Text(result.summary),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    children:
-                        result.tags.map((tag) => Chip(label: Text(tag))).toList(),
-                  ),
-                ],
-              ),
-              loading: () => const LinearProgressIndicator(),
-              error: (error, _) => Text('Failed to fetch analysis: $error'),
+            FutureBuilder(
+              future: controller.analyze(item.content),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const LinearProgressIndicator();
+                }
+                if (snapshot.hasError) {
+                  return Text('Failed to fetch analysis: ${snapshot.error}');
+                }
+                final result = snapshot.data;
+                if (result == null) {
+                  return const Text('No analysis available.');
+                }
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(result.title, style: Theme.of(context).textTheme.titleSmall),
+                    const SizedBox(height: 8),
+                    Text(result.summary),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      children: result.tags.map((tag) => Chip(label: Text(tag))).toList(),
+                    ),
+                  ],
+                );
+              },
             ),
             const Spacer(),
             SizedBox(

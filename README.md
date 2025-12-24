@@ -8,7 +8,7 @@ This repository contains a Flutter scaffold for **Clipboard AI Manager**, a cros
 3. Launch the app with `flutter run` on your target simulator or device.
 
 ## Key architecture decisions
-- **State management:** `flutter_riverpod` powers dependency injection and async state.
+- **State management:** `get` (GetX) powers lightweight dependency injection and reactive UI via controllers.
 - **Data layer:** `ClipboardRepository` wraps a `ClipboardService` for REST calls and local storage stubs. Swap in SQLite or secure storage as needed.
 - **Backend-ready:** Configure the base URL from the Settings screen. The service illustrates POST calls to `/clipboard/analyze` and can be extended for transform/classify endpoints.
 - **UI structure:** A three-tab layout (History, Favorites, Settings) with detailed item view and AI analysis placeholder.
