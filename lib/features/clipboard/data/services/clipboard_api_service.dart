@@ -4,8 +4,8 @@ import 'package:http/http.dart' as http;
 
 import '../../../history/domain/analysis_result.dart';
 
-class ClipboardService {
-  ClipboardService({required this.baseUrl, http.Client? client})
+class ClipboardApiService {
+  ClipboardApiService({required this.baseUrl, http.Client? client})
       : _client = client ?? http.Client();
 
   String baseUrl;

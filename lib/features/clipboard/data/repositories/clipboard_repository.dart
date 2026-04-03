@@ -1,22 +1,22 @@
 import 'dart:async';
+import 'dart:convert';
 
 import '../../../history/domain/analysis_result.dart';
 import '../../../history/domain/clipboard_item.dart';
 import '../../../history/domain/folder.dart';
-import '../services/clipboard_service.dart';
+import '../database/clipboard_database_schema.dart';
+import '../services/clipboard_api_service.dart';
+import '../services/clipboard_database_service.dart';
 
 class ClipboardRepository {
-  ClipboardRepository(this._service) {
-    _seedData();
-  }
+  ClipboardRepository(this._databaseService, this._apiService);
 
-  final ClipboardService _service;
-  final List<ClipboardItem> _items = <ClipboardItem>[];
-  final List<ClipboardFolder> _folders = <ClipboardFolder>[];
+  final ClipboardDatabaseService _databaseService;
+  final ClipboardApiService _apiService;
 
   Future<List<ClipboardItem>> fetchItems() async {
-    await Future<void>.delayed(const Duration(milliseconds: 120));
-    return List<ClipboardItem>.unmodifiable(_items);
+    final List<Map<String, Object?>> rows = await _databaseService.fetchItems();
+    return rows.map(_mapItem).toList(growable: false);
   }
 
   Future<List<ClipboardItem>> searchItems(String query) async {
@@ -37,14 +37,21 @@ class ClipboardRepository {
       createdAt: DateTime.now(),
       type: inferred,
     );
-    _items.insert(0, item);
+    await _databaseService.insertItem(_itemToMap(item));
   }
 
   Future<void> toggleFavorite(String id) async {
-    final index = _items.indexWhere((item) => item.id == id);
-    if (index == -1) return;
-    final item = _items[index];
-    _items[index] = item.copyWith(isFavorite: !item.isFavorite);
+    final Map<String, Object?>? itemRow =
+        await _databaseService.fetchItemById(id);
+    if (itemRow == null) {
+      return;
+    }
+
+    final ClipboardItem item = _mapItem(itemRow);
+    await _databaseService.updateItemFavorite(
+      id: id,
+      isFavorite: !item.isFavorite,
+    );
   }
 
   Future<List<ClipboardItem>> fetchFavorites() async {
@@ -52,16 +59,31 @@ class ClipboardRepository {
   }
 
   Future<List<ClipboardFolder>> fetchFolders() async {
-    await Future<void>.delayed(const Duration(milliseconds: 120));
-    return List<ClipboardFolder>.unmodifiable(_folders);
+    final List<Map<String, Object?>> rows =
+        await _databaseService.fetchFolders();
+    return rows.map(_mapFolder).toList(growable: false);
+  }
+
+  Future<void> createFolder({
+    required String id,
+    required String name,
+    String? description,
+  }) async {
+    await _databaseService.upsertFolder(
+      <String, Object?>{
+        ClipboardDatabaseSchema.folderId: id,
+        ClipboardDatabaseSchema.folderName: name,
+        ClipboardDatabaseSchema.folderDescription: description,
+      },
+    );
   }
 
   Future<AnalysisResult> analyze(String text) async {
-    return _service.analyze(text);
+    return _apiService.analyze(text);
   }
 
   void updateBaseUrl(String value) {
-    _service.updateBaseUrl(value);
+    _apiService.updateBaseUrl(value);
   }
 
   ClipboardItemType _inferType(String content) {
@@ -78,42 +100,44 @@ class ClipboardRepository {
     return ClipboardItemType.text;
   }
 
-  void _seedData() {
-    _folders.addAll(
-      <ClipboardFolder>[
-        const ClipboardFolder(id: 'general', name: 'General'),
-        const ClipboardFolder(id: 'work', name: 'Work'),
-        const ClipboardFolder(id: 'ideas', name: 'Ideas'),
-      ],
+  ClipboardItem _mapItem(Map<String, Object?> row) {
+    return ClipboardItem.withId(
+      id: row[ClipboardDatabaseSchema.itemId]! as String,
+      content: row[ClipboardDatabaseSchema.itemContent]! as String,
+      createdAt: DateTime.parse(
+        row[ClipboardDatabaseSchema.itemCreatedAt]! as String,
+      ),
+      type: ClipboardItemType.values.firstWhere(
+        (ClipboardItemType itemType) =>
+            itemType.name == row[ClipboardDatabaseSchema.itemType],
+        orElse: () => ClipboardItemType.unknown,
+      ),
+      isFavorite: (row[ClipboardDatabaseSchema.itemIsFavorite]! as int) == 1,
+      folderId: row[ClipboardDatabaseSchema.itemFolderId] as String?,
+      tags: (jsonDecode(row[ClipboardDatabaseSchema.itemTags]! as String)
+              as List<dynamic>)
+          .map((dynamic tag) => tag.toString())
+          .toList(growable: false),
     );
+  }
 
-    final now = DateTime.now();
-    _items.addAll(
-      <ClipboardItem>[
-        ClipboardItem.withId(
-          id: '1',
-          content: 'https://docs.mybackend.dev/api',
-          createdAt: now.subtract(const Duration(minutes: 10)),
-          type: ClipboardItemType.url,
-          isFavorite: true,
-          tags: const <String>['api', 'docs'],
-        ),
-        ClipboardItem.withId(
-          id: '2',
-          content: 'Next stand-up at 9:30 AM tomorrow.',
-          createdAt: now.subtract(const Duration(hours: 2)),
-          type: ClipboardItemType.text,
-          isFavorite: false,
-          folderId: 'work',
-        ),
-        ClipboardItem.withId(
-          id: '3',
-          content: '443-221',
-          createdAt: now.subtract(const Duration(days: 1)),
-          type: ClipboardItemType.number,
-          isFavorite: false,
-        ),
-      ],
+  Map<String, Object?> _itemToMap(ClipboardItem item) {
+    return <String, Object?>{
+      ClipboardDatabaseSchema.itemId: item.id,
+      ClipboardDatabaseSchema.itemContent: item.content,
+      ClipboardDatabaseSchema.itemCreatedAt: item.createdAt.toIso8601String(),
+      ClipboardDatabaseSchema.itemType: item.type.name,
+      ClipboardDatabaseSchema.itemIsFavorite: item.isFavorite ? 1 : 0,
+      ClipboardDatabaseSchema.itemFolderId: item.folderId,
+      ClipboardDatabaseSchema.itemTags: jsonEncode(item.tags),
+    };
+  }
+
+  ClipboardFolder _mapFolder(Map<String, Object?> row) {
+    return ClipboardFolder(
+      id: row[ClipboardDatabaseSchema.folderId]! as String,
+      name: row[ClipboardDatabaseSchema.folderName]! as String,
+      description: row[ClipboardDatabaseSchema.folderDescription] as String?,
     );
   }
 }
