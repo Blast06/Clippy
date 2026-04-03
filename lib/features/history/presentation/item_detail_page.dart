@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../shared/controllers/clipboard_controller.dart';
+import '../../clipboard/presentation/controllers/clipboard_controller.dart';
 import '../domain/clipboard_item.dart';
 
 class ItemDetailPage extends StatelessWidget {
@@ -52,13 +52,16 @@ class ItemDetailPage extends StatelessWidget {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    Text(result.title, style: Theme.of(context).textTheme.titleSmall),
+                    Text(result.title,
+                        style: Theme.of(context).textTheme.titleSmall),
                     const SizedBox(height: 8),
                     Text(result.summary),
                     const SizedBox(height: 8),
                     Wrap(
                       spacing: 8,
-                      children: result.tags.map((tag) => Chip(label: Text(tag))).toList(),
+                      children: result.tags
+                          .map((tag) => Chip(label: Text(tag)))
+                          .toList(),
                     ),
                   ],
                 );
@@ -82,12 +85,12 @@ class ItemDetailPage extends StatelessWidget {
   void _showTransformSheet(BuildContext context) {
     showModalBottomSheet<void>(
       context: context,
-      builder: (_) => Padding(
-        padding: const EdgeInsets.all(16),
+      builder: (_) => const Padding(
+        padding: EdgeInsets.all(16),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: const <Widget>[
+          children: <Widget>[
             Text('Transform via backend'),
             SizedBox(height: 8),
             Text('POST /clipboard/transform'),

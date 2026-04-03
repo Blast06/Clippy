@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../shared/controllers/clipboard_controller.dart';
+import '../../clipboard/presentation/controllers/clipboard_controller.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -29,7 +29,8 @@ class _SettingsPageState extends State<SettingsPage> {
               initialValue: controller.baseUrl.value,
               decoration: const InputDecoration(
                 labelText: 'Base URL',
-                helperText: 'Configure your backend endpoint for AI processing.',
+                helperText:
+                    'Configure your backend endpoint for AI processing.',
               ),
               onChanged: controller.updateBaseUrl,
             ),
@@ -43,7 +44,8 @@ class _SettingsPageState extends State<SettingsPage> {
             SwitchListTile(
               value: _biometricEnabled,
               title: const Text('Biometric / PIN lock'),
-              subtitle: const Text('Gate clipboard access behind authentication.'),
+              subtitle:
+                  const Text('Gate clipboard access behind authentication.'),
               onChanged: (value) => setState(() => _biometricEnabled = value),
             ),
             const SizedBox(height: 16),
@@ -51,12 +53,14 @@ class _SettingsPageState extends State<SettingsPage> {
             const ListTile(
               leading: Icon(Icons.privacy_tip_outlined),
               title: Text('Exclude sensitive apps'),
-              subtitle: Text('Wire this to your platform channel implementation.'),
+              subtitle:
+                  Text('Wire this to your platform channel implementation.'),
             ),
             const ListTile(
               leading: Icon(Icons.delete_outline),
               title: Text('Clear history'),
-              subtitle: Text('Provide a confirmation dialog to purge local data.'),
+              subtitle:
+                  Text('Provide a confirmation dialog to purge local data.'),
             ),
           ],
         ),

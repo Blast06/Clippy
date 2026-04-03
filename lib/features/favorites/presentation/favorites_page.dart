@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../shared/controllers/clipboard_controller.dart';
-import '../../shared/widgets/clipboard_item_card.dart';
+import '../../clipboard/presentation/controllers/clipboard_controller.dart';
 import '../../history/presentation/item_detail_page.dart';
+import '../../shared/widgets/clipboard_item_card.dart';
 
 class FavoritesPage extends StatelessWidget {
   const FavoritesPage({super.key});

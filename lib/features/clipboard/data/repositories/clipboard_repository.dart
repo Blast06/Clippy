@@ -1,9 +1,9 @@
 import 'dart:async';
 
-import '../domain/analysis_result.dart';
-import '../domain/clipboard_item.dart';
-import '../domain/folder.dart';
-import 'clipboard_service.dart';
+import '../../../history/domain/analysis_result.dart';
+import '../../../history/domain/clipboard_item.dart';
+import '../../../history/domain/folder.dart';
+import '../services/clipboard_service.dart';
 
 class ClipboardRepository {
   ClipboardRepository(this._service) {
@@ -23,7 +23,8 @@ class ClipboardRepository {
     final lower = query.toLowerCase();
     return (await fetchItems())
         .where(
-          (item) => item.content.toLowerCase().contains(lower) ||
+          (item) =>
+              item.content.toLowerCase().contains(lower) ||
               item.tags.any((tag) => tag.toLowerCase().contains(lower)),
         )
         .toList();

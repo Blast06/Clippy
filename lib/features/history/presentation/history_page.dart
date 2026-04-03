@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../shared/controllers/clipboard_controller.dart';
+import '../../clipboard/presentation/controllers/clipboard_controller.dart';
 import '../../shared/widgets/clipboard_item_card.dart';
 import '../domain/clipboard_item.dart';
 import 'item_detail_page.dart';
@@ -26,7 +26,8 @@ class _HistoryPageState extends State<HistoryPage> {
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: () async {
-              await controller.addItem('New sample snippet at ${DateTime.now()}');
+              await controller
+                  .addItem('New sample snippet at ${DateTime.now()}');
             },
           ),
         ],
@@ -55,7 +56,8 @@ class _HistoryPageState extends State<HistoryPage> {
 
                 if (items.isEmpty) {
                   return const Center(
-                    child: Text('No clipboard items yet. Copy something to get started!'),
+                    child: Text(
+                        'No clipboard items yet. Copy something to get started!'),
                   );
                 }
 

@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
-import '../domain/analysis_result.dart';
+import '../../../history/domain/analysis_result.dart';
 
 class ClipboardService {
   ClipboardService({required this.baseUrl, http.Client? client})
@@ -25,10 +25,10 @@ class ClipboardService {
       );
     }
 
-    return AnalysisResult(
+    return const AnalysisResult(
       title: 'Offline analysis',
       summary: 'No network response. Showing a sample summary for now.',
-      tags: const <String>['offline', 'sample'],
+      tags: <String>['offline', 'sample'],
     );
   }
 

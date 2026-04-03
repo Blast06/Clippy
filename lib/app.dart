@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 
 import 'core/routes/app_router.dart';
 import 'core/theme/app_theme.dart';
-import 'features/shared/providers/providers.dart';
+import 'features/clipboard/presentation/bindings/clipboard_binding.dart';
 
 class ClipboardApp extends StatelessWidget {
   const ClipboardApp({super.key});
@@ -11,7 +11,7 @@ class ClipboardApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-      title: 'Clipboard AI Manager',
+      title: 'Clippy',
       theme: AppTheme.light(),
       debugShowCheckedModeBanner: false,
       initialBinding: ClipboardBinding(),

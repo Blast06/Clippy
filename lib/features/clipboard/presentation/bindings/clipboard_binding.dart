@@ -1,10 +1,9 @@
 import 'package:get/get.dart';
 
-import '../../history/data/clipboard_repository.dart';
-import '../../history/data/clipboard_service.dart';
+import '../../data/repositories/clipboard_repository.dart';
+import '../../data/services/clipboard_service.dart';
 import '../controllers/clipboard_controller.dart';
 
-/// Registers GetX dependencies for clipboard features.
 class ClipboardBinding extends Bindings {
   ClipboardBinding({String baseUrl = 'https://api.example.com'})
       : _baseUrl = baseUrl;
