@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../clipboard/presentation/controllers/clipboard_controller.dart';
+import 'controllers/settings_controller.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -11,9 +11,7 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  final ClipboardController controller = Get.find<ClipboardController>();
-  bool _syncEnabled = false;
-  bool _biometricEnabled = false;
+  final SettingsController controller = Get.find<SettingsController>();
 
   @override
   Widget build(BuildContext context) {
@@ -36,17 +34,17 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
             const SizedBox(height: 16),
             SwitchListTile(
-              value: _syncEnabled,
+              value: controller.syncEnabled.value,
               title: const Text('Enable cloud sync'),
               subtitle: const Text('Opt-in synchronization across devices.'),
-              onChanged: (value) => setState(() => _syncEnabled = value),
+              onChanged: controller.updateSyncEnabled,
             ),
             SwitchListTile(
-              value: _biometricEnabled,
+              value: controller.biometricEnabled.value,
               title: const Text('Biometric / PIN lock'),
               subtitle:
                   const Text('Gate clipboard access behind authentication.'),
-              onChanged: (value) => setState(() => _biometricEnabled = value),
+              onChanged: controller.updateBiometricEnabled,
             ),
             const SizedBox(height: 16),
             const Text('Privacy'),

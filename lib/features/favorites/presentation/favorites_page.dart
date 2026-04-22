@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../clipboard/presentation/controllers/clipboard_controller.dart';
+import 'controllers/favorites_controller.dart';
 import '../../history/presentation/item_detail_page.dart';
 import '../../shared/widgets/clipboard_item_card.dart';
 
@@ -10,7 +10,7 @@ class FavoritesPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.find<ClipboardController>();
+    final controller = Get.find<FavoritesController>();
     return Scaffold(
       appBar: AppBar(title: const Text('Favorites')),
       body: Obx(() {

@@ -5,8 +5,8 @@ import '../../../history/domain/clipboard_item.dart';
 import '../../../history/domain/folder.dart';
 import '../../data/repositories/clipboard_repository.dart';
 
-class ClipboardController extends GetxController {
-  ClipboardController({
+class ClipboardStateController extends GetxController {
+  ClipboardStateController({
     required this.repository,
     String initialBaseUrl = 'https://api.example.com',
   }) : baseUrl = initialBaseUrl.obs;
@@ -17,13 +17,13 @@ class ClipboardController extends GetxController {
   final RxString baseUrl;
   final RxBool loading = false.obs;
 
-  List<ClipboardItem> get favorites =>
-      items.where((item) => item.isFavorite).toList();
+  bool _hasLoaded = false;
 
-  @override
-  void onInit() {
-    super.onInit();
-    loadData();
+  Future<void> ensureLoaded() async {
+    if (_hasLoaded || loading.value) {
+      return;
+    }
+    await loadData();
   }
 
   Future<void> loadData() async {
@@ -31,6 +31,7 @@ class ClipboardController extends GetxController {
     items.assignAll(await repository.fetchItems());
     folders.assignAll(await repository.fetchFolders());
     loading.value = false;
+    _hasLoaded = true;
   }
 
   List<ClipboardItem> search(String query) {

@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../clipboard/presentation/controllers/clipboard_controller.dart';
 import '../domain/clipboard_item.dart';
+import 'controllers/ai_controller.dart';
 
 class ItemDetailPage extends StatelessWidget {
   ItemDetailPage({super.key, required this.item});
 
   final ClipboardItem item;
-  final ClipboardController controller = Get.find<ClipboardController>();
+  final AiController controller = Get.find<AiController>();
 
   @override
   Widget build(BuildContext context) {

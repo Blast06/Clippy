@@ -1,19 +1,25 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:get/get.dart';
 import 'package:clipboard_ai_manager/core/routes/app_router.dart';
 import 'package:clipboard_ai_manager/features/clipboard/data/repositories/clipboard_repository.dart';
 import 'package:clipboard_ai_manager/features/clipboard/data/services/clipboard_api_service.dart';
 import 'package:clipboard_ai_manager/features/clipboard/data/services/clipboard_database_service.dart';
-import 'package:clipboard_ai_manager/features/clipboard/presentation/controllers/clipboard_controller.dart';
+import 'package:clipboard_ai_manager/features/clipboard/presentation/controllers/clipboard_state_controller.dart';
+import 'package:clipboard_ai_manager/features/favorites/presentation/controllers/favorites_controller.dart';
 import 'package:clipboard_ai_manager/features/history/domain/analysis_result.dart';
+import 'package:clipboard_ai_manager/features/history/presentation/controllers/ai_controller.dart';
+import 'package:clipboard_ai_manager/features/history/presentation/controllers/folders_controller.dart';
+import 'package:clipboard_ai_manager/features/history/presentation/controllers/history_controller.dart';
+import 'package:clipboard_ai_manager/features/settings/presentation/controllers/settings_controller.dart';
+import 'package:get/get.dart';
 
 class _TestClipboardDatabaseService extends ClipboardDatabaseService {
   @override
-  Future<List<Map<String, Object?>>> fetchItems() async => <Map<String, Object?>>[];
+  Future<List<Map<String, Object?>>> fetchItems() async =>
+      <Map<String, Object?>>[];
 
   @override
-  Future<List<Map<String, Object?>>> fetchFolders() async => <Map<String, Object?>>[];
+  Future<List<Map<String, Object?>>> fetchFolders() async =>
+      <Map<String, Object?>>[];
 
   @override
   Future<void> insertItem(Map<String, Object?> values) async {}
@@ -51,14 +57,30 @@ void main() {
       _TestClipboardDatabaseService(),
       _TestClipboardApiService(),
     );
-    Get.put<ClipboardController>(
-      ClipboardController(repository: repository),
+    Get.put<ClipboardStateController>(
+      ClipboardStateController(repository: repository),
+    );
+    Get.put<HistoryController>(
+      HistoryController(Get.find<ClipboardStateController>()),
+    );
+    Get.put<FavoritesController>(
+      FavoritesController(Get.find<ClipboardStateController>()),
+    );
+    Get.put<SettingsController>(
+      SettingsController(Get.find<ClipboardStateController>()),
+    );
+    Get.put<FoldersController>(
+      FoldersController(Get.find<ClipboardStateController>()),
+    );
+    Get.put<AiController>(
+      AiController(Get.find<ClipboardStateController>()),
     );
   });
 
   tearDown(Get.reset);
 
-  testWidgets('router shows bottom navigation tabs', (WidgetTester tester) async {
+  testWidgets('router shows bottom navigation tabs',
+      (WidgetTester tester) async {
     await tester.pumpWidget(const GetMaterialApp(home: AppRouter()));
     await tester.pump();
 

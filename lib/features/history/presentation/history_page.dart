@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../clipboard/presentation/controllers/clipboard_controller.dart';
 import '../../shared/widgets/clipboard_item_card.dart';
 import '../domain/clipboard_item.dart';
+import 'controllers/history_controller.dart';
 import 'item_detail_page.dart';
 
 class HistoryPage extends StatefulWidget {
@@ -14,7 +14,7 @@ class HistoryPage extends StatefulWidget {
 }
 
 class _HistoryPageState extends State<HistoryPage> {
-  final ClipboardController controller = Get.find<ClipboardController>();
+  final HistoryController controller = Get.find<HistoryController>();
   String _query = '';
 
   @override
