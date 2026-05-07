@@ -7,6 +7,11 @@ import 'controllers/ai_controller.dart';
 class ItemDetailPage extends StatelessWidget {
   ItemDetailPage({super.key, required this.item});
 
+  factory ItemDetailPage.fromRoute() {
+    final ClipboardItem item = Get.arguments as ClipboardItem;
+    return ItemDetailPage(item: item);
+  }
+
   final ClipboardItem item;
   final AiController controller = Get.find<AiController>();
 

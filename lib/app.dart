@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import 'core/routes/app_router.dart';
+import 'core/routes/app_pages.dart';
+import 'core/routes/app_routes.dart';
 import 'core/theme/app_theme.dart';
 import 'features/clipboard/presentation/bindings/clipboard_binding.dart';
 
@@ -15,7 +16,8 @@ class ClipboardApp extends StatelessWidget {
       theme: AppTheme.light(),
       debugShowCheckedModeBanner: false,
       initialBinding: ClipboardBinding(),
-      home: const AppRouter(),
+      initialRoute: AppRoutes.home,
+      getPages: AppPages.routes,
     );
   }
 }

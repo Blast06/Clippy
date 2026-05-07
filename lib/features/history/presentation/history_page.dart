@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../core/routes/app_routes.dart';
 import '../../shared/widgets/clipboard_item_card.dart';
 import '../domain/clipboard_item.dart';
 import 'controllers/history_controller.dart';
-import 'item_detail_page.dart';
 
 class HistoryPage extends StatefulWidget {
   const HistoryPage({super.key});
@@ -67,12 +67,8 @@ class _HistoryPageState extends State<HistoryPage> {
                     final item = items[index];
                     return ClipboardItemCard(
                       item: item,
-                      onTap: (tapped) => Navigator.push(
-                        context,
-                        MaterialPageRoute<void>(
-                          builder: (_) => ItemDetailPage(item: tapped),
-                        ),
-                      ),
+                      onTap: (tapped) =>
+                          Get.toNamed(AppRoutes.itemDetail, arguments: tapped),
                       onToggleFavorite: (tapped) async {
                         await controller.toggleFavorite(tapped.id);
                       },

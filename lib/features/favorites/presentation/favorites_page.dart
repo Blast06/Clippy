@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import 'controllers/favorites_controller.dart';
-import '../../history/presentation/item_detail_page.dart';
+import '../../../core/routes/app_routes.dart';
 import '../../shared/widgets/clipboard_item_card.dart';
+import 'controllers/favorites_controller.dart';
 
 class FavoritesPage extends StatelessWidget {
   const FavoritesPage({super.key});
@@ -31,11 +31,9 @@ class FavoritesPage extends StatelessWidget {
             final item = favorites[index];
             return ClipboardItemCard(
               item: item,
-              onTap: (tapped) => Navigator.push(
-                context,
-                MaterialPageRoute<void>(
-                  builder: (_) => ItemDetailPage(item: tapped),
-                ),
+              onTap: (tapped) => Get.toNamed(
+                AppRoutes.itemDetail,
+                arguments: tapped,
               ),
               onToggleFavorite: (tapped) async {
                 await controller.toggleFavorite(tapped.id);
