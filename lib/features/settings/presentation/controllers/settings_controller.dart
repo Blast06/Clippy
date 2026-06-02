@@ -6,26 +6,31 @@ class SettingsController extends GetxController {
   SettingsController(this._state);
 
   final ClipboardStateController _state;
-  final RxBool syncEnabled = false.obs;
-  final RxBool biometricEnabled = false.obs;
 
   RxString get baseUrl => _state.baseUrl;
+  RxBool get backendEnabled => _state.backendEnabled;
+  RxBool get localOnlyMode => _state.localOnlyMode;
 
   @override
   void onInit() {
     super.onInit();
     _state.ensureLoaded();
+    _state.ensureSettingsLoaded();
   }
 
-  void updateBaseUrl(String value) {
-    _state.updateBaseUrl(value);
+  Future<void> updateBaseUrl(String value) {
+    return _state.updateBaseUrl(value);
   }
 
-  void updateSyncEnabled(bool value) {
-    syncEnabled.value = value;
+  Future<void> updateBackendEnabled(bool value) {
+    return _state.updateBackendEnabled(value);
   }
 
-  void updateBiometricEnabled(bool value) {
-    biometricEnabled.value = value;
+  Future<void> updateLocalOnlyMode(bool value) {
+    return _state.updateLocalOnlyMode(value);
+  }
+
+  Future<void> clearHistory() {
+    return _state.clearHistory();
   }
 }

@@ -20,10 +20,13 @@ class ClipboardStateController extends GetxController
   final RxList<ClipboardItem> items = <ClipboardItem>[].obs;
   final RxList<ClipboardFolder> folders = <ClipboardFolder>[].obs;
   final RxString baseUrl;
+  final RxBool backendEnabled = false.obs;
+  final RxBool localOnlyMode = true.obs;
   final RxBool loading = false.obs;
   final RxBool readingClipboard = false.obs;
 
   bool _hasLoaded = false;
+  bool _settingsLoaded = false;
 
   @override
   void onInit() {
@@ -51,6 +54,36 @@ class ClipboardStateController extends GetxController
     await loadData();
   }
 
+  Future<void> ensureSettingsLoaded() async {
+    if (_settingsLoaded) {
+      return;
+    }
+    await loadSettings();
+  }
+
+  Future<void> loadSettings() async {
+    final String? savedBackendEnabled = await repository.fetchSetting(
+      ClipboardRepository.backendEnabledKey,
+    );
+    final String? savedLocalOnlyMode = await repository.fetchSetting(
+      ClipboardRepository.localOnlyModeKey,
+    );
+    final String? savedBaseUrl = await repository.fetchSetting(
+      ClipboardRepository.backendBaseUrlKey,
+    );
+
+    backendEnabled.value =
+        _settingToBool(savedBackendEnabled, defaultValue: false);
+    localOnlyMode.value =
+        _settingToBool(savedLocalOnlyMode, defaultValue: true);
+
+    if (savedBaseUrl != null && savedBaseUrl.trim().isNotEmpty) {
+      await updateBaseUrl(savedBaseUrl, persist: false);
+    }
+
+    _settingsLoaded = true;
+  }
+
   Future<void> loadData() async {
     loading.value = true;
     items.assignAll(await repository.fetchItems());
@@ -72,6 +105,11 @@ class ClipboardStateController extends GetxController
 
   Future<void> addItem(String content) async {
     await repository.addItem(content);
+    await loadData();
+  }
+
+  Future<void> clearHistory() async {
+    await repository.clearHistory();
     await loadData();
   }
 
@@ -107,11 +145,68 @@ class ClipboardStateController extends GetxController
   }
 
   Future<AnalysisResult> analyze(String text) {
+    if (localOnlyMode.value || !backendEnabled.value) {
+      return Future<AnalysisResult>.value(
+        const AnalysisResult(
+          title: 'Local-only mode',
+          summary: 'Backend analysis is disabled in Settings.',
+          tags: <String>['local-only'],
+        ),
+      );
+    }
+
     return repository.analyze(text);
   }
 
-  void updateBaseUrl(String value) {
+  Future<void> updateBackendEnabled(bool value) async {
+    backendEnabled.value = value;
+    if (value) {
+      localOnlyMode.value = false;
+      await repository.saveSetting(
+        ClipboardRepository.localOnlyModeKey,
+        _boolToSetting(false),
+      );
+    }
+    await repository.saveSetting(
+      ClipboardRepository.backendEnabledKey,
+      _boolToSetting(value),
+    );
+  }
+
+  Future<void> updateLocalOnlyMode(bool value) async {
+    localOnlyMode.value = value;
+    if (value) {
+      backendEnabled.value = false;
+      await repository.saveSetting(
+        ClipboardRepository.backendEnabledKey,
+        _boolToSetting(false),
+      );
+    }
+    await repository.saveSetting(
+      ClipboardRepository.localOnlyModeKey,
+      _boolToSetting(value),
+    );
+  }
+
+  Future<void> updateBaseUrl(String value, {bool persist = true}) async {
     baseUrl.value = value;
     repository.updateBaseUrl(value);
+    if (persist) {
+      await repository.saveSetting(
+        ClipboardRepository.backendBaseUrlKey,
+        value,
+      );
+    }
+  }
+
+  bool _settingToBool(String? value, {required bool defaultValue}) {
+    if (value == null) {
+      return defaultValue;
+    }
+    return value == 'true';
+  }
+
+  String _boolToSetting(bool value) {
+    return value.toString();
   }
 }

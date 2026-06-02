@@ -11,6 +11,10 @@ import '../services/clipboard_database_service.dart';
 class ClipboardRepository {
   ClipboardRepository(this._databaseService, this._apiService);
 
+  static const String backendEnabledKey = 'backend_enabled';
+  static const String localOnlyModeKey = 'local_only_mode';
+  static const String backendBaseUrlKey = 'backend_base_url';
+
   final ClipboardDatabaseService _databaseService;
   final ClipboardApiService _apiService;
 
@@ -43,6 +47,10 @@ class ClipboardRepository {
       type: inferred,
     );
     await _databaseService.insertItem(_itemToMap(item));
+  }
+
+  Future<void> clearHistory() async {
+    await _databaseService.clearItems();
   }
 
   Future<bool> containsContent(String content) async {
@@ -96,6 +104,14 @@ class ClipboardRepository {
 
   Future<AnalysisResult> analyze(String text) async {
     return _apiService.analyze(text);
+  }
+
+  Future<String?> fetchSetting(String key) {
+    return _databaseService.fetchSetting(key);
+  }
+
+  Future<void> saveSetting(String key, String value) {
+    return _databaseService.upsertSetting(key: key, value: value);
   }
 
   void updateBaseUrl(String value) {

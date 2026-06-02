@@ -2,10 +2,11 @@ class ClipboardDatabaseSchema {
   const ClipboardDatabaseSchema._();
 
   static const String databaseName = 'clippy.db';
-  static const int version = 1;
+  static const int version = 2;
 
   static const String itemsTable = 'clipboard_items';
   static const String foldersTable = 'clipboard_folders';
+  static const String settingsTable = 'app_settings';
 
   static const String itemId = 'id';
   static const String itemContent = 'content';
@@ -18,6 +19,9 @@ class ClipboardDatabaseSchema {
   static const String folderId = 'id';
   static const String folderName = 'name';
   static const String folderDescription = 'description';
+
+  static const String settingKey = 'key';
+  static const String settingValue = 'value';
 
   static const String createFoldersTable = '''
     CREATE TABLE $foldersTable (
@@ -37,6 +41,13 @@ class ClipboardDatabaseSchema {
       $itemFolderId TEXT,
       $itemTags TEXT NOT NULL DEFAULT '[]',
       FOREIGN KEY ($itemFolderId) REFERENCES $foldersTable($folderId)
+    )
+  ''';
+
+  static const String createSettingsTable = '''
+    CREATE TABLE $settingsTable (
+      $settingKey TEXT PRIMARY KEY,
+      $settingValue TEXT NOT NULL
     )
   ''';
 }

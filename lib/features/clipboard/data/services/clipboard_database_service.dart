@@ -28,6 +28,12 @@ class ClipboardDatabaseService {
       onCreate: (Database db, int version) async {
         await db.execute(ClipboardDatabaseSchema.createFoldersTable);
         await db.execute(ClipboardDatabaseSchema.createItemsTable);
+        await db.execute(ClipboardDatabaseSchema.createSettingsTable);
+      },
+      onUpgrade: (Database db, int oldVersion, int newVersion) async {
+        if (oldVersion < 2) {
+          await db.execute(ClipboardDatabaseSchema.createSettingsTable);
+        }
       },
     );
 
@@ -57,6 +63,11 @@ class ClipboardDatabaseService {
       values,
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
+  }
+
+  Future<void> clearItems() async {
+    final Database db = await database;
+    await db.delete(ClipboardDatabaseSchema.itemsTable);
   }
 
   Future<void> updateItemFavorite({
@@ -93,6 +104,36 @@ class ClipboardDatabaseService {
     await db.insert(
       ClipboardDatabaseSchema.foldersTable,
       values,
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<String?> fetchSetting(String key) async {
+    final Database db = await database;
+    final List<Map<String, Object?>> rows = await db.query(
+      ClipboardDatabaseSchema.settingsTable,
+      columns: <String>[ClipboardDatabaseSchema.settingValue],
+      where: '${ClipboardDatabaseSchema.settingKey} = ?',
+      whereArgs: <Object?>[key],
+      limit: 1,
+    );
+    if (rows.isEmpty) {
+      return null;
+    }
+    return rows.first[ClipboardDatabaseSchema.settingValue] as String;
+  }
+
+  Future<void> upsertSetting({
+    required String key,
+    required String value,
+  }) async {
+    final Database db = await database;
+    await db.insert(
+      ClipboardDatabaseSchema.settingsTable,
+      <String, Object?>{
+        ClipboardDatabaseSchema.settingKey: key,
+        ClipboardDatabaseSchema.settingValue: value,
+      },
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }

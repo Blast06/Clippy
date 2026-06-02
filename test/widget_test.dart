@@ -25,6 +25,9 @@ class _TestClipboardDatabaseService extends ClipboardDatabaseService {
   Future<void> insertItem(Map<String, Object?> values) async {}
 
   @override
+  Future<void> clearItems() async {}
+
+  @override
   Future<void> updateItemFavorite({
     required String id,
     required bool isFavorite,
@@ -35,6 +38,15 @@ class _TestClipboardDatabaseService extends ClipboardDatabaseService {
 
   @override
   Future<void> upsertFolder(Map<String, Object?> values) async {}
+
+  @override
+  Future<String?> fetchSetting(String key) async => null;
+
+  @override
+  Future<void> upsertSetting({
+    required String key,
+    required String value,
+  }) async {}
 }
 
 class _TestClipboardApiService extends ClipboardApiService {
