@@ -10,6 +10,7 @@ class HistoryController extends GetxController {
 
   RxList<ClipboardItem> get items => _state.items;
   RxBool get loading => _state.loading;
+  RxBool get readingClipboard => _state.readingClipboard;
 
   @override
   void onInit() {
@@ -23,6 +24,10 @@ class HistoryController extends GetxController {
 
   Future<void> addItem(String content) {
     return _state.addItem(content);
+  }
+
+  Future<ClipboardReadResult> readSystemClipboard() {
+    return _state.readSystemClipboard();
   }
 
   Future<void> toggleFavorite(String id) {

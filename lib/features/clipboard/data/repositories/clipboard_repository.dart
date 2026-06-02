@@ -31,13 +31,29 @@ class ClipboardRepository {
   }
 
   Future<void> addItem(String content, {ClipboardItemType? type}) async {
-    final inferred = type ?? _inferType(content);
+    final normalizedContent = content.trim();
+    if (normalizedContent.isEmpty) {
+      return;
+    }
+
+    final inferred = type ?? _inferType(normalizedContent);
     final item = ClipboardItem(
-      content: content,
+      content: normalizedContent,
       createdAt: DateTime.now(),
       type: inferred,
     );
     await _databaseService.insertItem(_itemToMap(item));
+  }
+
+  Future<bool> containsContent(String content) async {
+    final normalizedContent = _normalizeForDuplicate(content);
+    if (normalizedContent.isEmpty) {
+      return false;
+    }
+
+    return (await fetchItems()).any(
+      (item) => _normalizeForDuplicate(item.content) == normalizedContent,
+    );
   }
 
   Future<void> toggleFavorite(String id) async {
@@ -87,17 +103,58 @@ class ClipboardRepository {
   }
 
   ClipboardItemType _inferType(String content) {
-    final uri = Uri.tryParse(content);
-    if (uri != null && uri.hasAbsolutePath) {
+    final trimmed = content.trim();
+
+    final emailPattern = RegExp(
+      r'^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$',
+      caseSensitive: false,
+    );
+    if (emailPattern.hasMatch(trimmed)) {
+      return ClipboardItemType.email;
+    }
+
+    if (_isUrl(trimmed)) {
       return ClipboardItemType.url;
     }
 
-    final number = num.tryParse(content);
-    if (number != null) {
+    final number = num.tryParse(trimmed.replaceAll(',', ''));
+    if (number != null && _isPlainNumber(trimmed)) {
       return ClipboardItemType.number;
     }
 
+    if (_isPhoneNumber(trimmed)) {
+      return ClipboardItemType.phone;
+    }
+
     return ClipboardItemType.text;
+  }
+
+  bool _isUrl(String content) {
+    final uri = Uri.tryParse(content);
+    if (uri != null &&
+        (uri.scheme == 'http' || uri.scheme == 'https') &&
+        uri.host.isNotEmpty) {
+      return true;
+    }
+
+    return RegExp(
+      r'^(www\.)[A-Z0-9.-]+\.[A-Z]{2,}([/?#].*)?$',
+      caseSensitive: false,
+    ).hasMatch(content);
+  }
+
+  bool _isPhoneNumber(String content) {
+    final phonePattern = RegExp(r'^\+?[\d\s().-]{7,}$');
+    final digitCount = RegExp(r'\d').allMatches(content).length;
+    return phonePattern.hasMatch(content) && digitCount >= 7;
+  }
+
+  bool _isPlainNumber(String content) {
+    return RegExp(r'^-?(\d+|\d{1,3}(,\d{3})+)(\.\d+)?$').hasMatch(content);
+  }
+
+  String _normalizeForDuplicate(String content) {
+    return content.trim().replaceAll(RegExp(r'\s+'), ' ').toLowerCase();
   }
 
   ClipboardItem _mapItem(Map<String, Object?> row) {

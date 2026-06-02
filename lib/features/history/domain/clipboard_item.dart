@@ -1,6 +1,6 @@
 import 'package:uuid/uuid.dart';
 
-enum ClipboardItemType { text, url, number, unknown }
+enum ClipboardItemType { text, url, email, phone, number, unknown }
 
 class ClipboardItem {
   ClipboardItem({
