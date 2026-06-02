@@ -1,5 +1,7 @@
 import 'package:get/get.dart';
 
+import '../../../../core/api/api_client.dart';
+import '../../../../core/api/api_config.dart';
 import '../../../favorites/presentation/controllers/favorites_controller.dart';
 import '../../../history/presentation/controllers/ai_controller.dart';
 import '../../../history/presentation/controllers/folders_controller.dart';
@@ -11,15 +13,19 @@ import '../../data/services/clipboard_database_service.dart';
 import '../controllers/clipboard_state_controller.dart';
 
 class ClipboardBinding extends Bindings {
-  ClipboardBinding({String baseUrl = 'https://api.example.com'})
-      : _baseUrl = baseUrl;
+  ClipboardBinding({ApiConfig? config})
+      : _config = config ?? ApiConfig.fromEnvironment();
 
-  final String _baseUrl;
+  final ApiConfig _config;
 
   @override
   void dependencies() {
+    Get.lazyPut<ApiClient>(
+      () => ApiClient(config: _config),
+      fenix: true,
+    );
     Get.lazyPut<ClipboardApiService>(
-      () => ClipboardApiService(baseUrl: _baseUrl),
+      () => ClipboardApiService(apiClient: Get.find<ApiClient>()),
       fenix: true,
     );
     Get.lazyPut<ClipboardDatabaseService>(
@@ -36,7 +42,7 @@ class ClipboardBinding extends Bindings {
     Get.lazyPut<ClipboardStateController>(
       () => ClipboardStateController(
         repository: Get.find<ClipboardRepository>(),
-        initialBaseUrl: _baseUrl,
+        initialBaseUrl: _config.baseUrl,
       ),
       fenix: true,
     );

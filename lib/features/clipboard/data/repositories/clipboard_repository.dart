@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
 
+import '../../../../core/api/api_exception.dart';
 import '../../../history/domain/analysis_result.dart';
 import '../../../history/domain/clipboard_item.dart';
 import '../../../history/domain/folder.dart';
 import '../database/clipboard_database_schema.dart';
+import '../dtos/clipboard_api_dtos.dart';
 import '../services/clipboard_api_service.dart';
 import '../services/clipboard_database_service.dart';
 
@@ -103,7 +105,26 @@ class ClipboardRepository {
   }
 
   Future<AnalysisResult> analyze(String text) async {
-    return _apiService.analyze(text);
+    try {
+      return await _apiService.analyze(text);
+    } on ApiException catch (error) {
+      return AnalysisResult(
+        title: 'Backend unavailable',
+        summary: error.message,
+        tags: const <String>['backend-error'],
+      );
+    }
+  }
+
+  Future<ClipboardTransformResponseDto> transform({
+    required String text,
+    required String instruction,
+  }) {
+    return _apiService.transform(text: text, instruction: instruction);
+  }
+
+  Future<ClipboardClassifyResponseDto> classify(String text) {
+    return _apiService.classify(text);
   }
 
   Future<String?> fetchSetting(String key) {

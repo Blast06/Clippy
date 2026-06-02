@@ -98,7 +98,7 @@ class ItemDetailPage extends StatelessWidget {
           children: <Widget>[
             Text('Transform via backend'),
             SizedBox(height: 8),
-            Text('POST /clipboard/transform'),
+            Text('POST /webhook/clipboard/transform'),
             SizedBox(height: 16),
             Text(
               'Hook this sheet to send the clipboard content to your backend for '

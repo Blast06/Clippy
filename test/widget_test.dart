@@ -1,4 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:clipboard_ai_manager/core/api/api_client.dart';
+import 'package:clipboard_ai_manager/core/api/api_config.dart';
 import 'package:clipboard_ai_manager/core/routes/app_router.dart';
 import 'package:clipboard_ai_manager/features/clipboard/data/repositories/clipboard_repository.dart';
 import 'package:clipboard_ai_manager/features/clipboard/data/services/clipboard_api_service.dart';
@@ -50,7 +52,12 @@ class _TestClipboardDatabaseService extends ClipboardDatabaseService {
 }
 
 class _TestClipboardApiService extends ClipboardApiService {
-  _TestClipboardApiService() : super(baseUrl: 'https://example.test');
+  _TestClipboardApiService()
+      : super(
+          apiClient: ApiClient(
+            config: const ApiConfig(baseUrl: 'https://example.test'),
+          ),
+        );
 
   @override
   Future<AnalysisResult> analyze(String text) async => const AnalysisResult(

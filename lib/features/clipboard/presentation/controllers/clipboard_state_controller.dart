@@ -13,7 +13,7 @@ class ClipboardStateController extends GetxController
     with WidgetsBindingObserver {
   ClipboardStateController({
     required this.repository,
-    String initialBaseUrl = 'https://api.example.com',
+    String initialBaseUrl = '',
   }) : baseUrl = initialBaseUrl.obs;
 
   final ClipboardRepository repository;
