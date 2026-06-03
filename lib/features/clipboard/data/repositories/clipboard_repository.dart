@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import '../../../../core/api/api_exception.dart';
+import '../../../history/domain/ai_action_result.dart';
 import '../../../history/domain/analysis_result.dart';
 import '../../../history/domain/clipboard_item.dart';
 import '../../../history/domain/folder.dart';
@@ -36,10 +37,11 @@ class ClipboardRepository {
         .toList();
   }
 
-  Future<void> addItem(String content, {ClipboardItemType? type}) async {
+  Future<ClipboardItem?> addItem(String content,
+      {ClipboardItemType? type}) async {
     final normalizedContent = content.trim();
     if (normalizedContent.isEmpty) {
-      return;
+      return null;
     }
 
     final inferred = type ?? _inferType(normalizedContent);
@@ -49,6 +51,23 @@ class ClipboardRepository {
       type: inferred,
     );
     await _databaseService.insertItem(_itemToMap(item));
+    return item;
+  }
+
+  Future<void> replaceItemContent({
+    required String id,
+    required String content,
+  }) async {
+    final normalizedContent = content.trim();
+    if (normalizedContent.isEmpty) {
+      return;
+    }
+
+    await _databaseService.updateItemContent(
+      id: id,
+      content: normalizedContent,
+      type: _inferType(normalizedContent).name,
+    );
   }
 
   Future<void> clearHistory() async {
@@ -118,13 +137,58 @@ class ClipboardRepository {
 
   Future<ClipboardTransformResponseDto> transform({
     required String text,
+    required String action,
     required String instruction,
   }) {
-    return _apiService.transform(text: text, instruction: instruction);
+    return _apiService.transform(
+      text: text,
+      action: action,
+      instruction: instruction,
+    );
   }
 
   Future<ClipboardClassifyResponseDto> classify(String text) {
     return _apiService.classify(text);
+  }
+
+  Future<AiActionResult> runAiAction({
+    required ClipboardItem item,
+    required AiActionType action,
+  }) async {
+    final String output = switch (action) {
+      AiActionType.classify => _formatClassification(
+          await classify(item.content),
+        ),
+      _ => (await transform(
+          text: item.content,
+          action: action.key,
+          instruction: action.instruction,
+        ))
+            .text,
+    };
+
+    if (output.trim().isEmpty) {
+      throw const ApiException(
+        type: ApiExceptionType.decoding,
+        message: 'Backend returned an empty result.',
+      );
+    }
+
+    final result = AiActionResult(
+      itemId: item.id,
+      action: action,
+      input: item.content,
+      output: output.trim(),
+      createdAt: DateTime.now(),
+    );
+    await _databaseService.insertAiActionResult(_aiActionResultToMap(result));
+    return result;
+  }
+
+  Future<List<AiActionResult>> fetchAiActionResults(String itemId) async {
+    final List<Map<String, Object?>> rows =
+        await _databaseService.fetchAiActionResults(itemId);
+    return rows.map(_mapAiActionResult).toList(growable: false);
   }
 
   Future<String?> fetchSetting(String key) {
@@ -225,6 +289,45 @@ class ClipboardRepository {
       ClipboardDatabaseSchema.itemFolderId: item.folderId,
       ClipboardDatabaseSchema.itemTags: jsonEncode(item.tags),
     };
+  }
+
+  AiActionResult _mapAiActionResult(Map<String, Object?> row) {
+    return AiActionResult.withId(
+      id: row[ClipboardDatabaseSchema.aiResultId]! as String,
+      itemId: row[ClipboardDatabaseSchema.aiResultItemId]! as String,
+      action: AiActionType.values.firstWhere(
+        (AiActionType action) =>
+            action.key == row[ClipboardDatabaseSchema.aiResultAction],
+        orElse: () => AiActionType.summarize,
+      ),
+      input: row[ClipboardDatabaseSchema.aiResultInput]! as String,
+      output: row[ClipboardDatabaseSchema.aiResultOutput]! as String,
+      createdAt: DateTime.parse(
+        row[ClipboardDatabaseSchema.aiResultCreatedAt]! as String,
+      ),
+    );
+  }
+
+  Map<String, Object?> _aiActionResultToMap(AiActionResult result) {
+    return <String, Object?>{
+      ClipboardDatabaseSchema.aiResultId: result.id,
+      ClipboardDatabaseSchema.aiResultItemId: result.itemId,
+      ClipboardDatabaseSchema.aiResultAction: result.action.key,
+      ClipboardDatabaseSchema.aiResultInput: result.input,
+      ClipboardDatabaseSchema.aiResultOutput: result.output,
+      ClipboardDatabaseSchema.aiResultCreatedAt:
+          result.createdAt.toIso8601String(),
+    };
+  }
+
+  String _formatClassification(ClipboardClassifyResponseDto response) {
+    final List<String> lines = <String>[
+      'Type: ${response.type.name}',
+      if (response.labels.isNotEmpty) 'Labels: ${response.labels.join(', ')}',
+      if (response.confidence != null)
+        'Confidence: ${(response.confidence! * 100).toStringAsFixed(1)}%',
+    ];
+    return lines.join('\n');
   }
 
   ClipboardFolder _mapFolder(Map<String, Object?> row) {

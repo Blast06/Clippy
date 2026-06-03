@@ -21,12 +21,14 @@ class ClipboardApiService {
 
   Future<ClipboardTransformResponseDto> transform({
     required String text,
+    required String action,
     required String instruction,
   }) async {
     final response = await _apiClient.postJson(
       path: transformPath,
       body: ClipboardTransformRequestDto(
         text: text,
+        action: action,
         instruction: instruction,
       ).toJson(),
     );

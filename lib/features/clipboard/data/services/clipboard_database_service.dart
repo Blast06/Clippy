@@ -29,10 +29,14 @@ class ClipboardDatabaseService {
         await db.execute(ClipboardDatabaseSchema.createFoldersTable);
         await db.execute(ClipboardDatabaseSchema.createItemsTable);
         await db.execute(ClipboardDatabaseSchema.createSettingsTable);
+        await db.execute(ClipboardDatabaseSchema.createAiActionResultsTable);
       },
       onUpgrade: (Database db, int oldVersion, int newVersion) async {
         if (oldVersion < 2) {
           await db.execute(ClipboardDatabaseSchema.createSettingsTable);
+        }
+        if (oldVersion < 3) {
+          await db.execute(ClipboardDatabaseSchema.createAiActionResultsTable);
         }
       },
     );
@@ -68,6 +72,23 @@ class ClipboardDatabaseService {
   Future<void> clearItems() async {
     final Database db = await database;
     await db.delete(ClipboardDatabaseSchema.itemsTable);
+  }
+
+  Future<void> updateItemContent({
+    required String id,
+    required String content,
+    required String type,
+  }) async {
+    final Database db = await database;
+    await db.update(
+      ClipboardDatabaseSchema.itemsTable,
+      <String, Object?>{
+        ClipboardDatabaseSchema.itemContent: content,
+        ClipboardDatabaseSchema.itemType: type,
+      },
+      where: '${ClipboardDatabaseSchema.itemId} = ?',
+      whereArgs: <Object?>[id],
+    );
   }
 
   Future<void> updateItemFavorite({
@@ -134,6 +155,25 @@ class ClipboardDatabaseService {
         ClipboardDatabaseSchema.settingKey: key,
         ClipboardDatabaseSchema.settingValue: value,
       },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<List<Map<String, Object?>>> fetchAiActionResults(String itemId) async {
+    final Database db = await database;
+    return db.query(
+      ClipboardDatabaseSchema.aiActionResultsTable,
+      where: '${ClipboardDatabaseSchema.aiResultItemId} = ?',
+      whereArgs: <Object?>[itemId],
+      orderBy: '${ClipboardDatabaseSchema.aiResultCreatedAt} DESC',
+    );
+  }
+
+  Future<void> insertAiActionResult(Map<String, Object?> values) async {
+    final Database db = await database;
+    await db.insert(
+      ClipboardDatabaseSchema.aiActionResultsTable,
+      values,
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }

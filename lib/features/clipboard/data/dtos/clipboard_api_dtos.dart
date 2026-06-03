@@ -45,14 +45,17 @@ class ClipboardTransformRequestDto {
   const ClipboardTransformRequestDto({
     required this.text,
     required this.instruction,
+    required this.action,
   });
 
   final String text;
   final String instruction;
+  final String action;
 
   Map<String, dynamic> toJson() {
     return <String, dynamic>{
       'text': text,
+      'action': action,
       'instruction': instruction,
     };
   }

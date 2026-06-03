@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 
+import '../../../history/domain/ai_action_result.dart';
 import '../../../history/domain/analysis_result.dart';
 import '../../../history/domain/clipboard_item.dart';
 import '../../../history/domain/folder.dart';
@@ -108,6 +109,14 @@ class ClipboardStateController extends GetxController
     await loadData();
   }
 
+  Future<void> replaceItemContent({
+    required String id,
+    required String content,
+  }) async {
+    await repository.replaceItemContent(id: id, content: content);
+    await loadData();
+  }
+
   Future<void> clearHistory() async {
     await repository.clearHistory();
     await loadData();
@@ -156,6 +165,24 @@ class ClipboardStateController extends GetxController
     }
 
     return repository.analyze(text);
+  }
+
+  bool get canUseBackend => backendEnabled.value && !localOnlyMode.value;
+
+  Future<List<AiActionResult>> fetchAiActionResults(String itemId) {
+    return repository.fetchAiActionResults(itemId);
+  }
+
+  Future<AiActionResult> runAiAction({
+    required ClipboardItem item,
+    required AiActionType action,
+  }) async {
+    await ensureSettingsLoaded();
+    if (!canUseBackend) {
+      throw StateError('Backend is disabled. Enable it in Settings first.');
+    }
+
+    return repository.runAiAction(item: item, action: action);
   }
 
   Future<void> updateBackendEnabled(bool value) async {

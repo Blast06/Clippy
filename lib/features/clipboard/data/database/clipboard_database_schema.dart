@@ -2,11 +2,12 @@ class ClipboardDatabaseSchema {
   const ClipboardDatabaseSchema._();
 
   static const String databaseName = 'clippy.db';
-  static const int version = 2;
+  static const int version = 3;
 
   static const String itemsTable = 'clipboard_items';
   static const String foldersTable = 'clipboard_folders';
   static const String settingsTable = 'app_settings';
+  static const String aiActionResultsTable = 'ai_action_results';
 
   static const String itemId = 'id';
   static const String itemContent = 'content';
@@ -22,6 +23,13 @@ class ClipboardDatabaseSchema {
 
   static const String settingKey = 'key';
   static const String settingValue = 'value';
+
+  static const String aiResultId = 'id';
+  static const String aiResultItemId = 'item_id';
+  static const String aiResultAction = 'action';
+  static const String aiResultInput = 'input';
+  static const String aiResultOutput = 'output';
+  static const String aiResultCreatedAt = 'created_at';
 
   static const String createFoldersTable = '''
     CREATE TABLE $foldersTable (
@@ -48,6 +56,19 @@ class ClipboardDatabaseSchema {
     CREATE TABLE $settingsTable (
       $settingKey TEXT PRIMARY KEY,
       $settingValue TEXT NOT NULL
+    )
+  ''';
+
+  static const String createAiActionResultsTable = '''
+    CREATE TABLE $aiActionResultsTable (
+      $aiResultId TEXT PRIMARY KEY,
+      $aiResultItemId TEXT NOT NULL,
+      $aiResultAction TEXT NOT NULL,
+      $aiResultInput TEXT NOT NULL,
+      $aiResultOutput TEXT NOT NULL,
+      $aiResultCreatedAt TEXT NOT NULL,
+      FOREIGN KEY ($aiResultItemId) REFERENCES $itemsTable($itemId)
+        ON DELETE CASCADE
     )
   ''';
 }
