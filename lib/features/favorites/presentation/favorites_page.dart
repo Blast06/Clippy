@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
 import '../../../core/routes/app_routes.dart';
 import '../../shared/widgets/clipboard_item_card.dart';
+import '../../shared/widgets/empty_state.dart';
 import 'controllers/favorites_controller.dart';
 
 class FavoritesPage extends StatelessWidget {
@@ -17,11 +19,25 @@ class FavoritesPage extends StatelessWidget {
         final favorites = controller.favorites;
 
         if (controller.loading.value) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                CircularProgressIndicator(),
+                SizedBox(height: 16),
+                Text('Loading favorites...'),
+              ],
+            ),
+          );
         }
 
         if (favorites.isEmpty) {
-          return const Center(child: Text('No favorites yet.'));
+          return const EmptyState(
+            icon: Icons.star_border,
+            title: 'No favorites yet',
+            message:
+                'Star important clipboard items from History so they are easy to find later.',
+          );
         }
 
         return ListView.builder(
@@ -38,7 +54,11 @@ class FavoritesPage extends StatelessWidget {
               onToggleFavorite: (tapped) async {
                 await controller.toggleFavorite(tapped.id);
               },
-              onCopy: (tapped) {
+              onCopy: (tapped) async {
+                await Clipboard.setData(ClipboardData(text: tapped.content));
+                if (!context.mounted) {
+                  return;
+                }
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('Copied: ${tapped.content}')),
                 );

@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import '../domain/ai_action_result.dart';
 import '../domain/clipboard_item.dart';
 import 'controllers/ai_controller.dart';
+import '../../shared/widgets/empty_state.dart';
 
 class ItemDetailPage extends StatefulWidget {
   const ItemDetailPage({super.key, required this.item});
@@ -86,8 +87,11 @@ class _ItemDetailPageState extends State<ItemDetailPage> {
           const SizedBox(height: 8),
           Obx(() {
             if (controller.results.isEmpty) {
-              return const Text(
-                'Run an AI action to save a backend result here.',
+              return const EmptyState(
+                icon: Icons.auto_fix_high,
+                title: 'No AI results yet',
+                message:
+                    'Run an action above. Successful backend results are saved locally for this clipboard item.',
               );
             }
 

@@ -3,7 +3,6 @@ import 'package:get/get.dart';
 
 import '../../../clipboard/presentation/controllers/clipboard_state_controller.dart';
 import '../../domain/ai_action_result.dart';
-import '../../domain/analysis_result.dart';
 import '../../domain/clipboard_item.dart';
 
 class AiController extends GetxController {
@@ -17,10 +16,6 @@ class AiController extends GetxController {
 
   bool get isRunning => runningAction.value != null;
   bool get canUseBackend => _state.canUseBackend;
-
-  Future<AnalysisResult> analyze(String text) {
-    return _state.analyze(text);
-  }
 
   @override
   void onInit() {
@@ -70,10 +65,6 @@ class AiController extends GetxController {
     required AiActionResult result,
   }) {
     return _state.replaceItemContent(id: item.id, content: result.output);
-  }
-
-  void clearError() {
-    errorMessage.value = '';
   }
 
   void clearMessages() {
