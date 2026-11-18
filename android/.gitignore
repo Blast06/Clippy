@@ -3,3 +3,8 @@ gradle-wrapper.jar
 /captures
 /local.properties
 GeneratedPluginRegistrant.java
+
+# Release signing (never commit)
+key.properties
+*.jks
+*.keystore

@@ -1,0 +1,55 @@
+# iOS builds run on Codemagic (macOS machines + automatic code signing).
+# Every push to develop builds a signed IPA and uploads it to TestFlight.
+# Setup steps: docs/ci-cd.md
+
+workflows:
+  ios-testflight:
+    name: iOS → TestFlight
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    integrations:
+      # Name of the App Store Connect API key added in
+      # Codemagic → Team settings → Integrations → Developer Portal.
+      app_store_connect: Clippy ASC Key
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.juliodelgado.clippy
+      vars:
+        # Numeric "Apple ID" of the app in App Store Connect → App Information.
+        APP_STORE_APPLE_ID: "0000000000"
+      groups:
+        - clippy # optional: holds CLIPPY_BACKEND_BASE_URL
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: develop
+          include: true
+      cancel_previous_builds: true
+    scripts:
+      - name: Get packages
+        script: flutter pub get
+      - name: Tests
+        script: flutter test
+      - name: Install pods
+        script: find . -name "Podfile" -execdir pod install \;
+      - name: Apply signing profiles
+        script: xcode-project use-profiles
+      - name: Build IPA
+        script: |
+          BUILD_NUMBER=$(($(app-store-connect get-latest-testflight-build-number "$APP_STORE_APPLE_ID") + 1))
+          flutter build ipa --release \
+            --build-number=$BUILD_NUMBER \
+            --dart-define=CLIPPY_BACKEND_BASE_URL=${CLIPPY_BACKEND_BASE_URL:-} \
+            --export-options-plist=/Users/builder/export_options.plist
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
